@@ -33,8 +33,18 @@ void main() async {
     "name": "Faizan",
     "email": "Faizan@gmail.com",
   };
-  await firestore.collection("users").add(newUser);
-  print("New user saved");
+  // await firestore.collection("users").add(newUser);
+
+  // await firestore.collection("users").doc("id-newUser").set(newUser);
+
+  // await firestore
+  //     .collection("users")
+  //     .doc("id-newUser")
+  //     .update({"email": "Faizannew@gmail.com"});
+
+  await firestore.collection("users").doc("id-newUser").delete();
+
+  print("New user update");
 
   runApp(const MyApp());
 }
