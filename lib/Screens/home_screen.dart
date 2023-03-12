@@ -7,8 +7,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:testing_app/Screens/Email%20Auth/login_screen.dart';
 
@@ -135,138 +137,144 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(15),
-          child: Column(
-            children: [
-              CupertinoButton(
-                onPressed: () async {
-                  XFile? selectedImage = await ImagePicker()
-                      .pickImage(source: ImageSource.gallery);
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(15),
+            child: Column(
+              children: [
+                CupertinoButton(
+                  onPressed: () async {
+                    XFile? selectedImage = await ImagePicker()
+                        .pickImage(source: ImageSource.gallery);
 
-                  if (selectedImage != null) {
-                    File convertedFile = File(selectedImage.path);
-                    setState(() {
-                      profilepic = convertedFile;
-                    });
-                    log("Image selected!");
-                  } else {
-                    log("No image selected!");
-                  }
-                },
-                padding: EdgeInsets.zero,
-                child: CircleAvatar(
-                  radius: 40,
-                  backgroundImage:
-                      (profilepic != null) ? FileImage(profilepic!) : null,
-                  backgroundColor: Colors.grey,
-                ),
-              ),
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(hintText: "Name"),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(hintText: "Email Address"),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              TextField(
-                controller: ageController,
-                decoration: InputDecoration(hintText: "Age"),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              CupertinoButton(
-                onPressed: () {
-                  saveUser();
-                },
-                child: const Text("Save"),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              StreamBuilder<QuerySnapshot>(
-                stream:
-                    FirebaseFirestore.instance.collection("users").snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.active) {
-                    if (snapshot.hasData && snapshot.data != null) {
-                      return Container(
-                        child: ListView.builder(
-                            itemCount: snapshot.data!.docs.length,
-                            itemBuilder: (context, index) {
-                              Map userMap =
-                                  snapshot.data!.docs[index].data() as Map;
-                              return ListTile(
-                                title: Text(userMap["name"]),
-                                subtitle: Text(userMap["email"]),
-                                trailing: GestureDetector(
-                                    onTap: () {}, child: Icon(Icons.delete)),
-                              );
-                            }),
-                      );
+                    if (selectedImage != null) {
+                      File convertedFile = File(selectedImage.path);
+                      setState(() {
+                        profilepic = convertedFile;
+                      });
+                      log("Image selected!");
                     } else {
-                      return Text("No data");
+                      log("No image selected!");
                     }
-                  } else {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                },
+                  },
+                  padding: EdgeInsets.zero,
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundImage:
+                        (profilepic != null) ? FileImage(profilepic!) : null,
+                    backgroundColor: Colors.grey,
+                  ),
+                ),
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(hintText: "Name"),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(hintText: "Email Address"),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                TextField(
+                  controller: ageController,
+                  decoration: InputDecoration(hintText: "Age"),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                CupertinoButton(
+                  onPressed: () {
+                    saveUser();
+                  },
+                  child: const Text("Save"),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection("users")
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.active) {
+                      if (snapshot.hasData && snapshot.data != null) {
+                        return Container(
+                          height: 400.h,
+                          child: ListView.builder(
+                              shrinkWrap: true,
+                              scrollDirection: Axis.vertical,
+                              itemCount: snapshot.data!.docs.length,
+                              itemBuilder: (context, index) {
+                                Map userMap =
+                                    snapshot.data!.docs[index].data() as Map;
+                                return ListTile(
+                                  title: Text(userMap["name"]),
+                                  subtitle: Text(userMap["email"]),
+                                  trailing: GestureDetector(
+                                      onTap: () {}, child: Icon(Icons.delete)),
+                                );
+                              }),
+                        );
+                      } else {
+                        return Text("No data");
+                      }
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
 
-                // stream: FirebaseFirestore.instance
-                //     .collection("users")
-                //     .where("age", isGreaterThanOrEqualTo: 19)
-                //     .orderBy("age", descending: true)
-                //     .snapshots(),
-                // builder: (context, snapshot) {
-                //   if (snapshot.connectionState == ConnectionState.active) {
-                //     if (snapshot.hasData && snapshot.data != null) {
-                //       return Expanded(
-                //         child: ListView.builder(
-                //           itemCount: snapshot.data!.docs.length,
-                //           itemBuilder: (context, index) {
-                //             Map<String, dynamic> userMap =
-                //                 snapshot.data!.docs[index].data()
-                //                     as Map<String, dynamic>;
+                  // stream: FirebaseFirestore.instance
+                  //     .collection("users")
+                  //     .where("age", isGreaterThanOrEqualTo: 19)
+                  //     .orderBy("age", descending: true)
+                  //     .snapshots(),
+                  // builder: (context, snapshot) {
+                  //   if (snapshot.connectionState == ConnectionState.active) {
+                  //     if (snapshot.hasData && snapshot.data != null) {
+                  //       return Expanded(
+                  //         child: ListView.builder(
+                  //           itemCount: snapshot.data!.docs.length,
+                  //           itemBuilder: (context, index) {
+                  //             Map<String, dynamic> userMap =
+                  //                 snapshot.data!.docs[index].data()
+                  //                     as Map<String, dynamic>;
 
-                //             return ListTile(
-                //               leading: CircleAvatar(
-                //                 backgroundImage:
-                //                     NetworkImage(userMap["profilepic"]),
-                //               ),
-                //               title: Text(
-                //                   userMap["name"] + " (${userMap["age"]})"),
-                //               subtitle: Text(userMap["email"]),
-                //               trailing: IconButton(
-                //                 onPressed: () {
-                //                   // Delete
-                //                 },
-                //                 icon: Icon(Icons.delete),
-                //               ),
-                //             );
-                //           },
-                //         ),
-                //       );
-                //     } else {
-                //       return Text("No data!");
-                //     }
-                //   } else {
-                //     return Center(
-                //       child: CircularProgressIndicator(),
-                //     );
-                //   }
-                // },
-              ),
-            ],
+                  //             return ListTile(
+                  //               leading: CircleAvatar(
+                  //                 backgroundImage:
+                  //                     NetworkImage(userMap["profilepic"]),
+                  //               ),
+                  //               title: Text(
+                  //                   userMap["name"] + " (${userMap["age"]})"),
+                  //               subtitle: Text(userMap["email"]),
+                  //               trailing: IconButton(
+                  //                 onPressed: () {
+                  //                   // Delete
+                  //                 },
+                  //                 icon: Icon(Icons.delete),
+                  //               ),
+                  //             );
+                  //           },
+                  //         ),
+                  //       );
+                  //     } else {
+                  //       return Text("No data!");
+                  //     }
+                  //   } else {
+                  //     return Center(
+                  //       child: CircularProgressIndicator(),
+                  //     );
+                  //   }
+                  // },
+                ),
+              ],
+            ),
           ),
         ),
       ),
