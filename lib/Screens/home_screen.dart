@@ -7,12 +7,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:testing_app/Screens/Email%20Auth/login_screen.dart';
+import 'package:uuid/uuid.dart';
+import 'package:velocity_x/velocity_x.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,26 +44,37 @@ class _HomeScreenState extends State<HomeScreen> {
     emailController.clear();
     ageController.clear();
 
-    if (name != "" && email != "") {
-      // UploadTask uploadTask = FirebaseStorage.instance.ref().child("profilepictures").child(Uuid().v1()).putFile(profilepic!);
+    if (name != "" && email != "" && profilepic != null) {
+      UploadTask uploadTask = FirebaseStorage.instance
+          .ref()
+          .child("profilepictures")
+          .child(Uuid().v1())
+          .putFile(profilepic!); //uuid for unique id package
 
-      // StreamSubscription taskSubscription = uploadTask.snapshotEvents.listen((snapshot) {
-      //   double percentage = snapshot.bytesTransferred/snapshot.totalBytes * 100;
-      //   log(percentage.toString());
-      // });
+      //////////////////// for knwoning uploading percentage
+      StreamSubscription taskSubscription =
+          uploadTask.snapshotEvents.listen((snapshot) {
+        double percentage =
+            snapshot.bytesTransferred / snapshot.totalBytes * 100;
+        log(percentage.toString());
+      });
+      ////////////////////////////////////////////
 
-      // TaskSnapshot taskSnapshot = await uploadTask;
-      // String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+      TaskSnapshot taskSnapshot = await uploadTask;
+      String downloadUrl = await taskSnapshot.ref.getDownloadURL();
 
-      // taskSubscription.cancel();
+      taskSubscription.cancel();
 
       Map<String, dynamic> userData = {
         "name": name,
         "email": email,
         "age": age,
-        // "profilepic": downloadUrl,
+        "profilepic": downloadUrl,
         // "samplearray": [name, email, age]
       };
+      setState(() {
+        profilepic = null;
+      });
       FirebaseFirestore.instance.collection("users").add(userData);
       log("User created!");
     } else {
@@ -139,9 +150,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(15),
+            padding: EdgeInsets.symmetric(horizontal: 20.h),
             child: Column(
               children: [
+                20.h.heightBox,
                 CupertinoButton(
                   onPressed: () async {
                     XFile? selectedImage = await ImagePicker()
@@ -169,41 +181,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   controller: nameController,
                   decoration: InputDecoration(hintText: "Name"),
                 ),
-                const SizedBox(
-                  height: 10,
-                ),
+                10.h.heightBox,
                 TextField(
                   controller: emailController,
                   decoration: InputDecoration(hintText: "Email Address"),
                 ),
-                const SizedBox(
-                  height: 10,
-                ),
+                10.h.heightBox,
                 TextField(
                   controller: ageController,
                   decoration: InputDecoration(hintText: "Age"),
                 ),
-                const SizedBox(
-                  height: 10,
-                ),
+                10.h.heightBox,
                 CupertinoButton(
                   onPressed: () {
                     saveUser();
                   },
                   child: const Text("Save"),
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
+                20.h.heightBox,
                 StreamBuilder<QuerySnapshot>(
+                  // stream: FirebaseFirestore.instance
+                  //     .collection("users")
+                  //     .snapshots(),
+
+                  ///////// for filtering data
                   stream: FirebaseFirestore.instance
                       .collection("users")
+                      .orderBy("name")
+                      // .where("age", isGreaterThanOrEqualTo: 5)
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.active) {
                       if (snapshot.hasData && snapshot.data != null) {
                         return Container(
-                          height: 400.h,
+                          height: 300.h,
                           child: ListView.builder(
                               shrinkWrap: true,
                               scrollDirection: Axis.vertical,
@@ -212,10 +223,23 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Map userMap =
                                     snapshot.data!.docs[index].data() as Map;
                                 return ListTile(
-                                  title: Text(userMap["name"]),
+                                  leading: CircleAvatar(
+                                    backgroundImage:
+                                        NetworkImage(userMap["profilepic"]),
+                                  ),
+                                  title: Text(
+                                      userMap["name"] + " (${userMap["age"]})"),
                                   subtitle: Text(userMap["email"]),
                                   trailing: GestureDetector(
-                                      onTap: () {}, child: Icon(Icons.delete)),
+                                      onTap: () async {
+                                        await FirebaseFirestore.instance
+                                            .collection("users")
+                                            .doc(snapshot.data!.docs[index].id)
+                                            .delete();
+                                        log("Deletd");
+                                        Get.snackbar("Delete", "User Deleted");
+                                      },
+                                      child: Icon(Icons.delete)),
                                 );
                               }),
                         );

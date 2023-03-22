@@ -64,7 +64,7 @@ class MyApp extends StatelessWidget {
             builder: EasyLoading.init(),
             home: (FirebaseAuth.instance.currentUser != null)
                 ? const HomeScreen()
-                : const LoginScreen(),
+                : const HomeScreen(),
           );
         });
   }
