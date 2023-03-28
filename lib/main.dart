@@ -8,6 +8,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:testing_app/Screens/Email%20Auth/login_screen.dart';
+import 'package:testing_app/Screens/Services/notification_service.dart';
 import 'package:testing_app/Screens/home_screen.dart';
 import 'package:testing_app/firebase_options.dart';
 
@@ -16,6 +17,7 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseFirestore firestore = FirebaseFirestore.instance;
+  await NotificationService.initialize();
   ///// for all collection data
   // QuerySnapshot snapshot =
   //     await FirebaseFirestore.instance.collection("users").get();
